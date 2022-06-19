@@ -2,7 +2,8 @@ from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import time
 
-from server.Person import Person
+from Person import Person
+
 # global CONSTANTS
 
 HOST = 'localhost'
@@ -14,6 +15,9 @@ ADDR = (HOST, PORT)
 # GLOBAL VARS
 
 persons = []
+
+SERVER = socket(AF_INET, SOCK_STREAM)
+SERVER.bind(ADDR)  # setup the server
 
 
 def broadcast_message(msg, name):
@@ -45,25 +49,35 @@ def client_communication(person):
     name = client.recv(BUFSIZ).decode("utf8")
     person.__set_name__(name)
 
-    msg = bytes(f"{name} has joined the chat at {time.time()}", "utf8")
+    msg = f"{name} has joined the chat at {time.time()}"
     broadcast_message(msg)
 
     while True:
-        msg = client.recv(BUFSIZ)
-        if msg != bytes("{quit}","utf8"):
-            client.send(bytes("{quit}", "utf8"))
-            client.close()
-            persons.remove(person)
-        else:
-            client.send(msg, name)
+        try:
+            msg = client.recv(BUFSIZ)
+            print(f"{name}: ", msg.decode("utf8"))
+            if msg != bytes("{quit}", "utf8"):
+                broadcast_message(f"{name} has left the chat ..", "")
+                client.send(bytes("{quit}", "utf8"))
+                client.close()
+                persons.remove(person)
+            else:
+                broadcast_message(msg, name)
+        except Exception as e:
+            print("Exception", e)
 
 
 def accept_incoming_connections():
+    """
+    Wait for connecton from new clients, start new thread once connected
+    :return: None
+    """
+
     run = True
     while run:
         try:
             client, addr = SERVER.accept()
-            person = Person(addr,client)
+            person = Person(addr, client)
             persons.append(person)
             print(f"[CONNECTION] {addr} connected to the server {HOST} at time {time.time()}")
             Thread(target=client_communication, args=(person,)).start()
@@ -72,10 +86,6 @@ def accept_incoming_connections():
             run = False
     print("Server Down Crashed ..")
 
-
-
-SERVER = socket(AF_INET, SOCK_STREAM)
-SERVER.bind(ADDR)
 
 if __name__ == "__main__":
     SERVER.listen(MAX_CONNECTIONS)  # Listens for 5 connections at max.
