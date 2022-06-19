@@ -3,6 +3,7 @@ from threading import Thread
 import time
 
 from server.Person import Person
+# global CONSTANTS
 
 HOST = 'localhost'
 PORT = 5500
@@ -10,8 +11,22 @@ BUFSIZ = 512
 MAX_CONNECTIONS = 5
 ADDR = (HOST, PORT)
 
-def broadcast_message():
+# GLOBAL VARS
 
+persons = []
+
+
+def broadcast_message(msg, name):
+    """
+    send new messages to all clients
+    :param msg: bytes["utf8"]
+    :param name: str
+    :return:
+    """
+
+    for person in persons:
+        client = person.client
+        client.send(bytes(name + ": ", "utf8") + msg)
 
 
 def client_communication(person):
@@ -36,9 +51,11 @@ def client_communication(person):
     while True:
         msg = client.recv(BUFSIZ)
         if msg != bytes("{quit}","utf8"):
+            client.send(bytes("{quit}", "utf8"))
             client.close()
+            persons.remove(person)
         else:
-
+            client.send(msg, name)
 
 
 def accept_incoming_connections():
@@ -47,6 +64,7 @@ def accept_incoming_connections():
         try:
             client, addr = SERVER.accept()
             person = Person(addr,client)
+            persons.append(person)
             print(f"[CONNECTION] {addr} connected to the server {HOST} at time {time.time()}")
             Thread(target=client_communication, args=(person,)).start()
         except Exception as e:
