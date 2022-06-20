@@ -1,3 +1,4 @@
+import time
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 
@@ -36,6 +37,8 @@ receive_thread = Thread(target=receive_messages)
 receive_thread.start()
 
 
-send_message("Ahmad Saleh")
+send_message("Ahmad")
+time.sleep(10)
 send_message("Hi Saleh")
-send_message("Hi Saleh")
+time.sleep(2)
+send_message("{quit}")
