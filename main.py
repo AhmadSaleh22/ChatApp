@@ -1,17 +1,31 @@
+from flask import Flask, render_template, url_for, session, redirect
 
-# This is a sample Python script.
+NAME_KEY = "name"
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+app = Flask(__name__)
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+app.secret_key = "hellomynameisahmadsalehfrompalestine"
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+@app.route("/login")
+def login():
+    return render_template("login.html")
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+@app.route("/logout")
+def logout():
+    session.pop(NAME_KEY, None)
+    return redirect(url_for("login"))
+
+
+@app.route("/home")
+def home():
+    if NAME_KEY not in session:
+        return redirect(url_for("login"))
+
+    name = session[NAME_KEY]
+    return render_template("index.html")
+
+
+if __name__ == "__main__":
+    app.run(debug=True)

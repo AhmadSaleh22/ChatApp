@@ -27,6 +27,8 @@ def update_messages():
                 break
 
 
+Thread(target=update_messages).start()
+
 c1.send_message("Hi Moe")
 time.sleep(5)
 c2.send_message("Hi Ahmad, How are you")

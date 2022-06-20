@@ -1,5 +1,3 @@
-import threading
-from multiprocessing import shared_memory
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread, Lock
 
@@ -40,7 +38,7 @@ class Client:
                 self.messages.append(msg)
                 self.lock.release()
             except Exception as e:
-                print("[EXCPETION]", e)
+                print("[EXCEPTION]", e)
                 break
 
     def send_message(self, msg):
@@ -69,4 +67,4 @@ class Client:
         return messages_copy
 
     def disconnect(self):
-        self.send_message(bytes("{quit}", "utf8"))
+        self.send_message("{quit}")
