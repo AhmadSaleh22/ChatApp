@@ -30,7 +30,10 @@ def broadcast_message(msg, name):
 
     for person in persons:
         client = person.client
-        client.send(bytes(name, "utf8") + msg)
+        try:
+            client.send(bytes(name, "utf8") + msg)
+        except Exception as e:
+            print("[EXCEPTION]", e)
 
 
 def client_communication(person):
@@ -40,33 +43,29 @@ def client_communication(person):
         :return: None
     """
 
-    run = True
     client = person.client
     # name = person.name
-    addr = person.addr
+    # addr = person.addr
 
     # get person's name
     name = client.recv(BUFSIZ).decode("utf8")
     person.set_name(name)
 
-    msg = bytes(f"{name} has joined the chat at {time.time()}", "utf8")
+    msg = bytes(f"{name} has joined the chat ", "utf8")
     broadcast_message(msg, "")
 
     while True:
-        try:
-            msg = client.recv(BUFSIZ)
-            if msg != bytes("{quit}", "utf8"):
-                # client.send(bytes("{quit}", "utf8"))
-                client.close()
-                persons.remove(person)
-                broadcast_message(f"{name} has left the chat ..", "")
-                print(f"[DISCONNECTED] : {name} disconnected")
-            else:
-                broadcast_message(msg, name + ": ")
-                print(f"{name}: ", msg.decode("utf8"))
-
-        except Exception as e:
-            print("Exception", e)
+        msg = client.recv(BUFSIZ)
+        if msg == bytes("{quit}", "utf8"):
+            # client.send(bytes("{quit}", "utf8"))
+            client.close()
+            persons.remove(person)
+            broadcast_message(bytes(f"{name} has left the chat...", "utf8"), "")
+            print(f"[DISCONNECTED] : {name} disconnected")
+            break
+        else:
+            broadcast_message(msg, name + ": ")
+            print(f"{name}: ", msg.decode("utf8"))
 
 
 def accept_incoming_connections():
