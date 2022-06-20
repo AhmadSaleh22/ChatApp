@@ -2,14 +2,14 @@ from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import time
 
-from Person import Person
+from person import Person
 
 # global CONSTANTS
 
-HOST = 'localhost'
+HOST = ""
 PORT = 5500
 BUFSIZ = 512
-MAX_CONNECTIONS = 5
+MAX_CONNECTIONS = 10
 ADDR = (HOST, PORT)
 
 # GLOBAL VARS
@@ -30,7 +30,7 @@ def broadcast_message(msg, name):
 
     for person in persons:
         client = person.client
-        client.send(bytes(name + ": ", "utf8") + msg)
+        client.send(bytes(name, "utf8") + msg)
 
 
 def client_communication(person):
@@ -47,10 +47,10 @@ def client_communication(person):
 
     # get person's name
     name = client.recv(BUFSIZ).decode("utf8")
-    person.__set_name__(name)
+    person.set_name(name)
 
-    msg = f"{name} has joined the chat at {time.time()}"
-    broadcast_message(msg)
+    msg = bytes(f"{name} has joined the chat at {time.time()}", "utf8")
+    broadcast_message(msg, "")
 
     while True:
         try:
@@ -62,28 +62,29 @@ def client_communication(person):
                 client.close()
                 persons.remove(person)
             else:
-                broadcast_message(msg, name)
+                broadcast_message(msg, name + ": ")
         except Exception as e:
             print("Exception", e)
 
 
 def accept_incoming_connections():
     """
-    Wait for connecton from new clients, start new thread once connected
+    Wait for connection from new clients, start new thread once connected
     :return: None
     """
 
-    run = True
-    while run:
+    while True:
         try:
             client, addr = SERVER.accept()
             person = Person(addr, client)
             persons.append(person)
+
             print(f"[CONNECTION] {addr} connected to the server {HOST} at time {time.time()}")
             Thread(target=client_communication, args=(person,)).start()
         except Exception as e:
             print("[SERVER ERR]", e)
-            run = False
+            break
+
     print("Server Down Crashed ..")
 
 
